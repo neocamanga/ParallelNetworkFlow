@@ -2,12 +2,6 @@ import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
 
-class Node {
-	int prevNode;
-	boolean add; // True = will +; False = will -
-	int potentialFlow;
-}
-
 public class FordFulkerson {
 
 	// Stores graph.
@@ -35,7 +29,7 @@ public class FordFulkerson {
 	}
 
 	public static String getInput() {
-		System.out.println("Enter dataset filename:");
+		System.out.println("Enter dataset path:");
 		Scanner fileInput = new Scanner(System.in); // Create a Scanner object
 		String filename = fileInput.nextLine();
 
@@ -61,7 +55,7 @@ public class FordFulkerson {
 		try {
 			File myObj = new File(filename);
 			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
+			while (myReader.hasNext()) {
 				int fromNode = myReader.nextInt();
 				int toNode = myReader.nextInt();
 				int capacity = myReader.nextInt();
@@ -91,4 +85,10 @@ public class FordFulkerson {
 	public static void add(int v1, int v2, int c) {
 		cap[v1][v2] = c;
 	}
+}
+
+class Node {
+	int prevNode;
+	boolean add; // True = will +; False = will -
+	int potentialFlow;
 }
