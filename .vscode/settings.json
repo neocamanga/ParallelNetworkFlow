@@ -1,0 +1,7 @@
+{
+	"java.project.sourcePaths": [
+		"Ford_Fulkerson",
+		"Dinics",
+		"Edmonds_Karp"
+	]
+}
