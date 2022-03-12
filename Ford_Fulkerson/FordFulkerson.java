@@ -1,8 +1,12 @@
 import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.*;
 
-public class FordFulkerson {
+public class FordFulkerson implements Runnable {
 
 	// labels of nodes
 	static public Node[] nodeLabels;
@@ -14,11 +18,22 @@ public class FordFulkerson {
 	static public int source = 0;
 	static public int sink;
 	static public int threadLimit = 8;
+	static public ReentrantLock lock = new ReentrantLock();
+	static public AtomicInteger column = new AtomicInteger(0);
+	static public AtomicBoolean isAugmented = new AtomicBoolean(false);
+	static public AtomicInteger waitForThreads = new AtomicInteger(0);
+	static public boolean isReady;
 
 	public static void main(String[] args) {
 		initialize();
 		// printGraph();
-		singleThreadFF();
+		// singleThreadFF();
+		multiThreadFF();
+	}
+
+	public void run()
+	{
+		;
 	}
 
 	public static void initialize() {
@@ -32,24 +47,29 @@ public class FordFulkerson {
 
 	public static String getInput() {
 		System.out.println("Enter dataset path:");
-		Scanner fileInput = new Scanner(System.in); // Create a Scanner object
-		String filename = fileInput.nextLine();
+		Scanner scan = new Scanner(System.in); // Create a Scanner object
+		String filename = scan.nextLine();
 
 		System.out.println("Enter number of nodes (includes source and sink):");
-		Scanner nodeInput = new Scanner(System.in); // Create a Scanner object
-		numNodes = nodeInput.nextInt();
+		// Scanner nodeInput = new Scanner(System.in); // Create a Scanner object
+		// numNodes = nodeInput.nextInt();
+		numNodes = scan.nextInt();
+
 		cap = new int[numNodes][numNodes];
 		flow = new int[numNodes][numNodes];
 		sink = numNodes - 1;
 
 		System.out.println("Enter the thread limit (defaults to 8):");
-		Scanner threadInput = new Scanner(System.in); // Create a Scanner object
-		threadLimit = threadInput.nextInt();
+		// Scanner threadInput = new Scanner(System.in); // Create a Scanner object
+		// threadLimit = threadInput.nextInt();
+
+		threadLimit = scan.nextInt();
 
 		System.out.println(filename + " " + numNodes + ":" + sink);
-		fileInput.close();
-		nodeInput.close();
-		threadInput.close();
+		scan.close();
+		// fileInput.close();
+		// nodeInput.close();
+		// threadInput.close();
 
 		return filename;
 	}
@@ -63,7 +83,7 @@ public class FordFulkerson {
 				int toNode = myReader.nextInt();
 				int capacity = myReader.nextInt();
 
-				System.out.println(fromNode + " --" + capacity + "-> " + toNode);
+				// System.out.println(fromNode + " --" + capacity + "-> " + toNode);
 				// Thread.sleep(1000);
 				add(fromNode, toNode, capacity);
 			}
@@ -93,12 +113,38 @@ public class FordFulkerson {
 		while (iterateFF()) {
 		}
 
+
+		System.out.println(getMaxFlow());
+	}
+
+	public static int getMaxFlow() {
 		int maxFlow = 0;
 
 		for (int i = 0; i <= sink; i++)
 			maxFlow += flow[i][sink];
+		
+		return maxFlow;
+	}
 
-		System.out.println(maxFlow);
+	public static void multiThreadFF() {
+		Thread[] threads;
+
+		// Limiting the amount of threads depending on however many total nodes that we have
+		if (threadLimit > numNodes)
+			threadLimit = numNodes;
+
+		threads = new Thread[threadLimit];
+
+		for (int i = 0; i < numNodes; i++) {
+			threads[i] = new Thread(new FFThread(i));
+			threads[i].start();
+		}
+
+		isReady = true;
+
+		while (threads[0].isAlive()) { }
+
+		System.out.println(getMaxFlow());
 	}
 
 	public static boolean iterateFF() {
@@ -170,29 +216,5 @@ public class FordFulkerson {
 
 			tN = nodeLabels[tN.prevNode];
 		}
-	}
-}
-
-// THIS IS THE LABEL OF A NODE
-class Node {
-	int prevNode;
-	int thisNode;
-	boolean add; // true = will +; false = will -
-	int potentialFlow;
-
-	// Constructor for source node
-	public Node() {
-		prevNode = -1; // source has no incoming flow
-		thisNode = 0;
-		add = true;
-		potentialFlow = (int) (1E9); // "Infinite" flow.
-	}
-
-	// Overloaded constructor
-	public Node(int i, boolean a, int j, int pFlow) {
-		prevNode = i;
-		thisNode = j;
-		add = a;
-		potentialFlow = pFlow;
 	}
 }
