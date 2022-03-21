@@ -9,8 +9,19 @@
 import static java.lang.Math.min;
 
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DinicsParallelBFS {
+
+    public static final AtomicInteger runIndex = new AtomicInteger(0);
+    public static ArrayBlockingQueue<Integer> q;
+    public static int[] level;
+    // The adjacency list representing the flow graph.
+    public static List<Edge>[] graph;
 
     private static class Edge {
         public int from, to;
@@ -60,9 +71,6 @@ public class DinicsParallelBFS {
 
         // The maximum flow. Calculated by calling the {@link #solve} method.
         protected long maxFlow;
-
-        // The adjacency list representing the flow graph.
-        protected List<Edge>[] graph;
 
         /**
          * Creates an instance of a flow network solver. Use the {@link #addEdge} method
@@ -138,8 +146,6 @@ public class DinicsParallelBFS {
 
     private static class DinicsSolver extends NetworkFlowSolverBase {
 
-        private int[] level;
-
         /**
          * Creates an instance of a flow network solver. Use the {@link #addEdge} method
          * to add edges to
@@ -177,21 +183,54 @@ public class DinicsParallelBFS {
         // which is the minimum number of edges from that node to the source.
         private boolean bfs() {
             Arrays.fill(level, -1);
-            Deque<Integer> q = new ArrayDeque<>(n);
+            q = new ArrayBlockingQueue<>(n);
             q.offer(s);
             level[s] = 0;
-            while (!q.isEmpty()) {
-                int node = q.poll();
-                for (Edge edge : graph[node]) {
-                    long cap = edge.remainingCapacity();
-                    if (cap > 0 && level[edge.to] == -1) {
-                        level[edge.to] = level[node] + 1;
-                        q.offer(edge.to);
-                    }
-                }
+
+            int numThreads = 16;
+            ExecutorService service = Executors.newFixedThreadPool(numThreads);
+            for (int i = 0; i < numThreads; i++) {
+                service.submit(new BFSHelper());
             }
+            
+            service.shutdown();
+
+            try{
+                service.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+            } catch(Throwable e) {
+                System.out.println(e);
+            }
+    
             // Return whether we were able to reach the sink node.
             return level[t] != -1;
+        }
+
+        static class BFSHelper extends DinicsParallelBFS implements Runnable {
+            public void run() {
+                boolean firstEntry = true;
+                while (firstEntry || runIndex.equals(new AtomicInteger(0))) {
+                    
+                    // System.out.println(Thread.currentThread().getId());
+                    firstEntry = false;
+                    try {
+                        runIndex.getAndIncrement();
+                        while (q.size() > 0) {
+                            int node = q.poll();
+                            for (Edge edge : graph[node]) {
+                                long cap = edge.remainingCapacity();
+                                if (cap > 0 && level[edge.to] == -1) {
+                                    level[edge.to] = level[node] + 1;
+                                    q.offer(edge.to);
+                                }
+                            }
+                        }
+                    } 
+                    finally {
+                        runIndex.getAndDecrement();
+                    }
+                    
+                }
+            }
         }
 
         private long dfs(int at, int[] next, long flow) {
@@ -247,6 +286,12 @@ public class DinicsParallelBFS {
         solver.addEdge(8, t, 10);
 
         // Prints: "Maximum flow: 30"
+
+        long timeStart = System.currentTimeMillis();
         System.out.printf("Maximum flow: %d\n", solver.getMaxFlow());
+        long timeEnd = System.currentTimeMillis();
+        System.out.println("Execution time: " + (timeEnd - timeStart) + "ms");
+        System.out.printf("run index is %d\n", runIndex.get());
+        System.out.printf("size of q is %d\n", q.size());
     }
 }

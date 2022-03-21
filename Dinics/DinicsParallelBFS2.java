@@ -9,8 +9,20 @@
 import static java.lang.Math.min;
 
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class Dinics {
+public class DinicsParallelBFS2 {
+
+    public static final AtomicInteger runIndex = new AtomicInteger(0);
+    public static ArrayBlockingQueue<Integer> q;
+    public static boolean[] isRunning;
+    public static int[] level;
+    // The adjacency list representing the flow graph.
+    public static List<Edge>[] graph;
 
     private static class Edge {
         public int from, to;
@@ -60,9 +72,6 @@ public class Dinics {
 
         // The maximum flow. Calculated by calling the {@link #solve} method.
         protected long maxFlow;
-
-        // The adjacency list representing the flow graph.
-        protected List<Edge>[] graph;
 
         /**
          * Creates an instance of a flow network solver. Use the {@link #addEdge} method
@@ -138,8 +147,6 @@ public class Dinics {
 
     private static class DinicsSolver extends NetworkFlowSolverBase {
 
-        private int[] level;
-
         /**
          * Creates an instance of a flow network solver. Use the {@link #addEdge} method
          * to add edges to
@@ -177,19 +184,39 @@ public class Dinics {
         // which is the minimum number of edges from that node to the source.
         private boolean bfs() {
             Arrays.fill(level, -1);
-            Deque<Integer> q = new ArrayDeque<>(n);
+            // Deque<Integer> q = new ArrayDeque<>(n);
+            q = new ArrayBlockingQueue<>(n);
+            
             q.offer(s);
             level[s] = 0;
-            while (!q.isEmpty()) {
-                int node = q.poll();
-                for (Edge edge : graph[node]) {
-                    long cap = edge.remainingCapacity();
-                    if (cap > 0 && level[edge.to] == -1) {
-                        level[edge.to] = level[node] + 1;
-                        q.offer(edge.to);
-                    }
-                }
+
+            int numThreads = 4;
+            ExecutorService service = Executors.newFixedThreadPool(numThreads);
+            isRunning = new boolean[numThreads];
+            for (int i = 0; i < numThreads; i++) {
+                service.submit(new BFSHelper());
             }
+
+            service.shutdown();
+
+            try{
+                service.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+            } catch(Throwable e) {
+                System.out.println(e);
+            }
+    
+            
+            // while (!q.isEmpty()) {
+            //     int node = q.poll();
+            //     for (Edge edge : graph[node]) {
+            //         long cap = edge.remainingCapacity();
+            //         if (cap > 0 && level[edge.to] == -1) {
+            //             level[edge.to] = level[node] + 1;
+            //             q.offer(edge.to);
+            //         }
+            //     }
+            // }
+
             // Return whether we were able to reach the sink node.
             return level[t] != -1;
         }
@@ -247,9 +274,59 @@ public class Dinics {
         solver.addEdge(8, t, 10);
 
         // Prints: "Maximum flow: 30"
+
         long timeStart = System.currentTimeMillis();
         System.out.printf("Maximum flow: %d\n", solver.getMaxFlow());
         long timeEnd = System.currentTimeMillis();
         System.out.println("Execution time: " + (timeEnd - timeStart) + "ms");
+        System.out.printf("run index is %d\n", runIndex.get());
+        System.out.printf("size of q is %d\n", q.size());
+    }
+
+    static class BFSHelper extends DinicsParallelBFS2 implements Runnable {
+
+        
+        public void run() {
+            // boolean isRun = false;
+            boolean firstEntry = true;
+            boolean keepGoing = false;
+        
+            // while (runIndex.get() != 0 || firstEntry) {
+            while (keepGoing || firstEntry) {
+
+                isRunning[(int)Thread.currentThread().getId()] = true;
+                firstEntry = false;
+                while (q.size() > 0) {
+                    // if (!isRun) {
+                    //     runIndex.getAndIncrement();
+                    //     isRun = true;
+                    // }
+                    int node = q.poll();
+                    for (Edge edge : graph[node]) {
+                        long cap = edge.remainingCapacity();
+                        if (cap > 0 && level[edge.to] == -1) {
+                            level[edge.to] = level[node] + 1;
+                            q.offer(edge.to);
+                        }
+                    }
+                }
+                
+                keepGoing = doWeKeepGoing();
+
+                // if(isRun)
+                //     runIndex.getAndDecrement();
+                // isRun = false;
+            }
+        }
+
+        public synchronized boolean doWeKeepGoing() {
+            boolean flag = false;
+            isRunning[(int)Thread.currentThread().getId()] = false;
+            for(int i = 0; i < isRunning.length; i++){
+                flag = flag || isRunning[i];
+            }
+            return flag;
+        }
+
     }
 }
