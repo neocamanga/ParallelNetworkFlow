@@ -1,10 +1,10 @@
 import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.*;
 
 public class FordFulkerson implements Runnable {
 
@@ -21,14 +21,20 @@ public class FordFulkerson implements Runnable {
 	static public ReentrantLock lock = new ReentrantLock();
 	static public AtomicInteger column = new AtomicInteger(0);
 	static public AtomicBoolean isAugmented = new AtomicBoolean(false);
-	static public AtomicInteger waitForThreads = new AtomicInteger(0);
+	static public AtomicBoolean FCFS = new AtomicBoolean(false); // First Come First Serve
+	static public CyclicBarrier barrier1;
+	static public CyclicBarrier barrier2;
 	static public boolean isReady;
 
 	public static void main(String[] args) {
 		initialize();
 		// printGraph();
+		final long startTime = System.currentTimeMillis();
 		// singleThreadFF();
 		multiThreadFF();
+		final long endTime = System.currentTimeMillis();
+        long executionTime = endTime - startTime;
+		System.out.println("Execution Time: " + executionTime + "ms");
 	}
 
 	public void run()
@@ -133,9 +139,12 @@ public class FordFulkerson implements Runnable {
 		if (threadLimit > numNodes)
 			threadLimit = numNodes;
 
+		barrier1 = new CyclicBarrier(threadLimit);
+		barrier2 = new CyclicBarrier(threadLimit);
+
 		threads = new Thread[threadLimit];
 
-		for (int i = 0; i < numNodes; i++) {
+		for (int i = 0; i < threadLimit; i++) {
 			threads[i] = new Thread(new FFThread(i));
 			threads[i].start();
 		}

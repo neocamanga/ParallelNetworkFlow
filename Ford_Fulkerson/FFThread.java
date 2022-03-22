@@ -1,4 +1,4 @@
-import java.util.*;
+import java.util.concurrent.BrokenBarrierException;
 
 public class FFThread extends FordFulkerson {
 
@@ -9,40 +9,63 @@ public class FFThread extends FordFulkerson {
 	}
 
 	public boolean iterateMultiFF() {
+		// System.out.println("io");
 		// Starts on source row. This allows us to label other nodes
-		for (int i = tNum; i - tNum < numNodes; i = (i + 1) % threadLimit) {
-			// Once this for-loop ends, we reach the sink node
-			for (column.set(0); column.get() < numNodes; column.getAndIncrement()) {
+		for (int offset = 0; offset < numNodes; offset++) {
+			int i = ((offset * threadLimit) + tNum) % numNodes;
+			// Do This? compare later, but I think not
+			// int i = (offset + tNum) % numNodes;
 
-				int j = column.get();
+			column.set(0);
+
+			// Once this for-loop ends, we reach the sink node
+			for (int j = column.get(); column.get() < numNodes; j = column.get()) {
 
 				// ensure prev node has a label
 				if (nodeLabels[i] != null) {
 
 					// if this node is not labeled (null) and flow is < cap
-					if ((nodeLabels[j] == null) && flow[i][j] < cap[i][j])
+					if ((nodeLabels[j] == null) && flow[i][j] < cap[i][j] && FCFS.compareAndSet(false, true))
 						label(i, true, j);
 
 					// if this node not labeled and flow is > 0
-					if ((nodeLabels[j] == null) && flow[j][i] > 0)
+					if ((nodeLabels[j] == null) && flow[j][i] > 0  && FCFS.compareAndSet(false, true))
 						label(i, false, j);
 
 				}
 
-				
-				// When thread hits the while loop, increment the
-				// counter by 1 to denote num of thread getting here
-				waitForThreads.incrementAndGet();
-				
 				// wait for all other threads. When that happens, continue for-loop
-				while (waitForThreads.get() == numNodes - 1) {}
+				try {
+					barrier1.await();
+					// System.out.println(Thread.currentThread() + " - " + j);
+					j = column.getAndSet(j + 1) + 1; // Ensures all threads increment correctly
+				} catch (InterruptedException | BrokenBarrierException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 
 			// if true, make all threads wait until augmenting is finished
-			if (isAugmented.compareAndSet(false, true) && nodeLabels[sink] != null) {
-				augment();
+			if (nodeLabels[sink] != null) {
+				// Only allow thread-0 to do augmenting
+				if (tNum == 0) {
+					// System.out.println(nodeLabels[sink]);
+					// System.out.println(Thread.currentThread());
+					augment();
+					isAugmented.set(false);
+					// System.out.println("Finish");
+				}
 
-				resetLabels();
+				// wait for all other threads. When that happens, continue
+				try {
+					// System.out.println("Barrier1: " + barrier1.getNumberWaiting() + " - " + Thread.currentThread());
+					barrier2.await();
+					resetLabels();
+				} catch (InterruptedException | BrokenBarrierException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
 				return true;
 			}
 		}
@@ -50,14 +73,9 @@ public class FFThread extends FordFulkerson {
 		return false; // Did not augment
 	}
 
-	public static void resetLabels() {
-		nodeLabels = new Node[numNodes];
-		nodeLabels[0] = new Node();
-	}
-
 	public static void label(int i, boolean add, int j) {
 
-		lock.lock();
+		// lock.lock();
 
 		int pFlow;
 
@@ -69,7 +87,8 @@ public class FFThread extends FordFulkerson {
 
 		nodeLabels[j] = new Node(i, add, j, pFlow);
 
-		lock.unlock();
+		FCFS.set(false);
+		// lock.unlock();
 	}
 
 	public static int min(int a, int b) {
@@ -99,7 +118,8 @@ public class FFThread extends FordFulkerson {
 			if (isReady) {
 				// Think this need to be in while loop
 				// but if one thread returns, then all need to as well
-				iterateMultiFF();
+				while (iterateMultiFF()) { }
+
 				break;
 			}
 		}
