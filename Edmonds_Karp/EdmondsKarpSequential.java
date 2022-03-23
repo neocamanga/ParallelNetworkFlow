@@ -8,7 +8,7 @@
 
  Input Format:                                     (Sample Input)
 
- N , E         | (N total nodes , E total edges) |  4 5
+ N             | (N total nodes)                 |  4
  u1 , v1 , c1  |                                 |  0 1 1000
  u2 , v2 , c2  | Each line u , v , c represents  |  1 2 1
  u3 , v3 , c3  | an edge in the graph from node  |  0 2 1000
@@ -21,8 +21,9 @@
 import java.util.*;
 import java.io.*;
 
-public class SeqEdmondsKarp
+public class EdmondsKarpSequential
 {
+	
 	public static void main(String[] args) 
 	{
 		Scanner fpScanner = new Scanner(System.in);
@@ -51,26 +52,6 @@ public class SeqEdmondsKarp
 		for (int i = 0; i < nodes; i++)
 			graph[i] = new Node();
 
-		// // Initialize each edge
-		// for (int i = 0; i < edges; i++) {
-		// 	int u = scan.nextInt();
-		// 	int v = scan.nextInt();
-		// 	int c = scan.nextInt();
-			
-		// 	// Note edge "b" is not actually in the input graph
-		// 	// It is a construct that allows us to solve the problem
-		// 	Edge a = new Edge(u , v , 0 , c);
-		// 	Edge b = new Edge(v , u , 0 , 0);
-			
-		// 	// Set pointer from each edge "a" to
-		// 	// its reverse edge "b" and vice versa
-		// 	a.setReverse(b);
-		// 	b.setReverse(a);
-			
-		// 	graph[u].edges.add(a);
-		// 	graph[v].edges.add(b);
-		// }
-		
 		// No need for edge count, just number of nodes
 		// Initialize each edge
 		while (scan.hasNext()) 
@@ -97,29 +78,38 @@ public class SeqEdmondsKarp
 
 		while (true)
 		{
-			// Parent array used for storing path
-			// (parent[i] stores edge used to get to node i)
-			Edge[] parent = new Edge[nodes];
+			// Edge array used for storing path
+			// (path[i] stores edge used to get to node i)
+			// All non-null values are the augmenting path
+			Edge[] path = new Edge[nodes];
 			
+			// Always start at source
 			Queue<Node> q = new ArrayDeque<>();
 			q.add(graph[source]);
 			
 			// BFS finding shortest augmenting path
-			while (!q.isEmpty()) {
+			while (!q.isEmpty())
+			{
 				Node curr = q.remove(); 
 				
-				// Checks that edge has not yet been visited, and it doesn't
+				// Checks that edge has not yet been visited, it doesn't
 				// point to the source, and it is possible to send flow through it. 
 				for (Edge e : curr.edges)
-					if (parent[e.t] == null && e.t != source && e.capacity > e.flow) {
-						parent[e.t] = e;
+				{
+					if (path[e.t] == null && e.t != source && e.capacity > e.flow)
+					{
+						// Add edge to augmenting path
+						path[e.t] = e;
+						// Add edge to queue
 						q.add(graph[e.t]);
 					}
+				}
 			}
+			// Finish BFS time to update flow
 				
 			// If sink was NOT reached, no augmenting path was found.
 			// Algorithm terminates and prints out max flow.
-			if (parent[sink] == null)
+			if (path[sink] == null)
 				break;
 			
 			// If sink WAS reached, we will push more flow through the path
@@ -127,11 +117,12 @@ public class SeqEdmondsKarp
 			
 			// Finds maximum flow that can be pushed through given path
 			// by finding the minimum residual flow of every edge in the path
-			for (Edge e = parent[sink]; e != null; e = parent[e.s])
+			for (Edge e = path[sink]; e != null; e = path[e.s])
 				pushFlow = Math.min(pushFlow , e.capacity - e.flow);
 			
 			// Adds to flow values and subtracts from reverse flow values in path
-			for (Edge e = parent[sink]; e != null; e = parent[e.s]) {
+			for (Edge e = path[sink]; e != null; e = path[e.s])
+			{
 				e.flow += pushFlow;
 				e.reverse.flow -= pushFlow;
 			}
