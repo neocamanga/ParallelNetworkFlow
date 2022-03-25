@@ -1,0 +1,3 @@
+The approach used in a parallel algorithm of Ford-Fulkerson already posed intimidating challenges. Unlike its sibling algorithms, Edmond-Karp in particular, FF is traditionally implemented using DFS, not breadth-first-search (BFS). Without the luxury of a an easily-parallelizable algorithm, research had to be done to convert a recursive DFS approach into an iterative one.
+        
+During a run of FF, the algorithm attempts to find augmenting paths by conducting two primary steps: searching for a valid flow-augmenting path, and then proceeding to update the flow-augmenting paths on a backward pass. Through this approach, we are parallelizing the search for unlabeled nodes. When doing an actual augmentation, we lock the threads.
