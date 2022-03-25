@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * EdmondsKarpParallel
@@ -8,24 +9,23 @@ import java.util.*;
  * COP4520
  * Network Flow Parallelization Project 
  */
-public class EdmondsKarpSequential
+public class EdmondsKarpParallel implements Runnable
 {
-    public static void main(String[] args)
+	public int maxFlow = 0;
+	Graph graph = new Graph();
+
+    public void run()
     {
-		long start = System.currentTimeMillis();
-        Graph graph = new Graph();
-
-        int maxFlow = 0;
-
+		Edge[] path;
         while (true)
         {
-            Edge[] path = graph.getAugPath();
+            path = graph.getAugPath();
 
             // If sink was NOT reached, no augmenting path was found.
 			// Algorithm terminates and prints out max flow.
 			if (path[graph.sink] == null)
                 break;
-        
+    
             // If sink WAS reached, we will push more flow through the path
             int pushFlow = Integer.MAX_VALUE;
             
@@ -40,13 +40,56 @@ public class EdmondsKarpSequential
                 e.flow += pushFlow;
                 e.reverse.flow -= pushFlow;
             }
-            
+
+            for (Edge e : path)
+			{
+				if (e != null)
+					e.unlock();
+			}
             maxFlow += pushFlow;
         }
-		long end = System.currentTimeMillis();
-        System.out.println("Max Flow: " + maxFlow);
-		System.out.println("Execution time: " + (end - start));
+		System.out.println("Thread terminating...");
+		for (Edge e : path)
+			if (e != null)
+				e.unlock();
     }
+
+	public static void main(String[] args)
+	{
+		try
+		{
+			long start = System.currentTimeMillis();
+			EdmondsKarpParallel ek = new EdmondsKarpParallel();
+			Thread thread1 = new Thread(ek);
+			thread1.start();
+			thread1.join();
+			Thread thread2 = new Thread(ek);
+			thread2.start();
+			thread2.join();
+			Thread thread3 = new Thread(ek);
+			thread3.start();
+			thread3.join();
+			// Thread thread4 = new Thread(ek);
+			// thread4.start();
+			// thread4.join();
+			// Thread thread5 = new Thread(ek);
+			// thread5.start();
+			// thread5.join();
+			// Thread thread6 = new Thread(ek);
+			// thread6.start();
+			// thread6.join();
+			// Thread thread7 = new Thread(ek);
+			// thread7.start();
+			// thread7.join();
+			// Thread thread8 = new Thread(ek);
+			// thread8.start();
+			// thread8.join();
+			long end = System.currentTimeMillis();
+			System.out.println("Max flow: " + ek.maxFlow);
+			System.out.println("Execution time: " + (end - start));
+		}
+		catch (Exception e) {}
+	}
     
 }
 
@@ -125,8 +168,9 @@ class Graph
                 if (path[e.v] == null && e.v != source && e.capacity > e.flow)
                 {
                     // Add Edge to augmenting path
+					e.lock();
                     path[e.v] = e;
-                    // Add connected Node to queue
+                    // Add connect Node to queue
                     q.add(matrix[e.v]);
                 }
             }
@@ -150,6 +194,7 @@ class Edge
 	
 	int u, v, flow, capacity;
 	Edge reverse;
+	ReentrantLock lock = new ReentrantLock();
 
 	public Edge(int u, int v, int flow, int capacity)
 	{
@@ -162,6 +207,16 @@ class Edge
 	public void setReverse(Edge e)
 	{
 		reverse = e;
+	}
+
+	public void lock()
+	{
+		lock.lock();
+	}
+
+	public void unlock()
+	{
+		lock.unlock();
 	}
 
 }

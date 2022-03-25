@@ -1,0 +1,93 @@
+\section{Instruções Gerais}
+
+A quantidade máxima recomendada de páginas para o artigo é de 20 páginas sem anexos ou apêndices.
+Quando escrever o seu artigo, por favor atente às seguintes instruções:
+
+\subsection{Resumo e abstract}
+Os artigos escritos em língua portuguesa devem ter também o resumo e as palavras-chave traduzidos para a língua inglesa.
+
+\subsection{Seções e subseções}
+As seções devem ser numeradas com algarismos romanos e ter o título centralizado. Já as subseções devem ser numeradas com letras maiúsculas e ter o título justificado, caso haja sequência de subtítulos as letras devem ser minúsculas e justificadas. 
+
+\subsubsection{Sub-subseção}
+
+Exemplo de uma sub-subseção.
+
+\subsection{Listas}
+
+Exemplos de como se pode fazer itens com itemize
+
+\begin{itemize}
+\item Item 1.
+\item Item 2.
+\item Item 3.
+\end{itemize}
+
+e com enumerate
+
+\begin{enumerate}
+ \item enumA
+ \item enumB
+\end{enumerate}
+
+\subsection{Figuras e Tabelas}
+
+Figuras e Tabelas devem ser incluídas como parte do texto sempre que possível, caso contrário, agrupe-as ao final do texto. As Figuras deve ter seus rótulos posicionados depois das mesmas, com alinhamento centralizado. A sua numeração deve ser feita com algarismos arábicos. Para as Tabelas, o procedimento é diferente: seus rótulos devem ser posicionados antes das mesmas, centralizados, e a numeração deve ser feita com algarismos romanos. As figuras devem ser referenciadas no texto, da seguinte forma: Na Figura \ref{fig:unoesc} é apresentado a logo da UNOESC.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{figuras/unoesc.jpg}
+    \caption{Uma figura. O título deve ser colocado abaixo da mesma.}
+    \label{fig:unoesc}
+\end{figure}
+
+\subsection{Equações}
+A numeração das equações deve ser entre parênteses e alinhada à direita. O cálculo é feito por meio de (\ref{eq:mgf}).
+
+\begin{equation}
+\label{eq:mgf}
+\phi_X(s)=E[e^{sx}]
+\end{equation}
+
+%Consulte a página 
+Para mais símbolos matemáticos, consulte o LaTeX wiki \cite{latexMath}
+
+\subsection{Fontes}
+
+Use fonte do tipo Times New Roman ou similar. Os tamanhos a serem usados são mostrados na Tabela \ref{tab:tabela1}
+
+\begin{table}[h]
+\centering
+\caption{Tamanhos e Tipos de Letras}
+\label{tab:tabela1}
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcr}
+\hline
+TEXTO                     & TAMANHO & ESTILO          \\ \hline
+Título                    & 24pt    & Negrito         \\
+Nome do autor             & 11pt    & Normal          \\
+Afiliação                 & 10pt    & Normal          \\
+Texto principal           & 10pt    & Normal          \\
+Título das seções         & 10pt    & Caixa Alta      \\
+Título das subseções      & 10pt    & Itálico         \\
+Título do resumo/abstract & 9pt     & Negrito,Itálico \\
+Resumo/Abstract           & 9pt     & Negrito         \\
+Título das figuras        & 8pt     & Normal          \\
+Título das tabelas        & 8pt     & Caixa Alta      \\
+Texto das tabelas         & 8pt     & Normal          \\
+Referências               & 8pt     & Normal          \\ \hline
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+
+%Se desejar, consulte a página \url{https://www.tablesgenerator.com} para criar a estrutura da sua tabela em latex. Esta página fornece uma interface gráfica que facilita a geração de tabelas em latex. Depois de gerado o código fonte pela página, insira este código no seu texto e faça os ajustes necessários.
+
+\subsection{References}
+
+Liste as referências em ordem numérica ao final do artigo. Ao final deste texto tem-se vários exemplos de como listá-las, dependendo do tipo. Denote as citações dentro do texto através de colchetes (por exemplo \cite{LIMA2018}). Ao referenciar mais de um trabalho, use o mesmo par de colchetes, como exemplo: \cite{LUCKMANN2008,livro-unoesc,NR10,abntex2modelo}. 
+
+Segue um exemplo para citações textuais: ``De acordo com \textcite{CHAPMAN2013}'' 
+
+\subsection{Outras questões}
+Não use notas de rodapé a menos que sejam estritamente necessárias; neste caso, procure não agrupá-las. 
