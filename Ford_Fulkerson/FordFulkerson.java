@@ -27,8 +27,8 @@ public class FordFulkerson implements Runnable {
 	public static void main(String[] args) {
 		initialize();
 		// printGraph();
-		// singleThreadFF();
-		multiThreadFF();
+		singleThreadFF();
+		// multiThreadFF();
 	}
 
 	public void run()
@@ -50,14 +50,10 @@ public class FordFulkerson implements Runnable {
 		Scanner scan = new Scanner(System.in); // Create a Scanner object
 		String filename = scan.nextLine();
 
-		System.out.println("Enter number of nodes (includes source and sink):");
+		// System.out.println("Enter number of nodes (includes source and sink):");
 		// Scanner nodeInput = new Scanner(System.in); // Create a Scanner object
 		// numNodes = nodeInput.nextInt();
-		numNodes = scan.nextInt();
-
-		cap = new int[numNodes][numNodes];
-		flow = new int[numNodes][numNodes];
-		sink = numNodes - 1;
+		// numNodes = scan.nextInt();
 
 		System.out.println("Enter the thread limit (defaults to 8):");
 		// Scanner threadInput = new Scanner(System.in); // Create a Scanner object
@@ -78,6 +74,13 @@ public class FordFulkerson implements Runnable {
 		try {
 			File myObj = new File(filename);
 			Scanner myReader = new Scanner(myObj);
+			numNodes = myReader.nextInt();
+			System.out.println(numNodes);
+			sink = numNodes - 1;
+
+			cap = new int[numNodes][numNodes];
+			flow = new int[numNodes][numNodes];
+
 			while (myReader.hasNext()) {
 				int fromNode = myReader.nextInt();
 				int toNode = myReader.nextInt();
