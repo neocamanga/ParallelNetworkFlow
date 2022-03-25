@@ -1,76 +1,83 @@
 \section{Ford Fulkerson}
 
 \subsection{Sequential Algorithm}
-    Ford-Fulkerson (FF) is a greedy algorithm to get the maximum flow of a graph.  The typical implementation of FF is through using Depth First Search (DFS). The other algorithms described in the other sections are variations based off of FF; however, the goal of this section of the project seeks to parallelize the traditional DFS approach \cite{FFvEk} of FF as other implementations such as Edmond Karp or Dinics takes advantage of specific graph structures.
+    Ford-Fulkerson (FF) is a greedy algorithm to get the maximum flow of a graph.  The typical implementation of FF is through using Depth First Search (DFS) in order to continuously augment paths through the residual graph, where an augmenting path is a path of edges in the residual graph with unused capacity greater than 0 from the source to the sink. \cite{FF-Fiset}
+    
+    To augment the graph means to find a path from the source to the sink in which  The other algorithms described in the other sections are variations based off of FF; however, the goal of this section of the project seeks to parallelize the traditional DFS approach \cite{FFvEk} of FF as other implementations such as Edmond Karp or Dinics takes advantage of specific graph structures.
     \newline
     
     \subsubsection{Pseudo Code of Sequential}
-    Note if there are $n$ nodes, each node will be indexed from 0 through $n-1$. In the algorithm, the Source node is indexed as 0 while the Sink node is indexed as $n-1$
-    \begin{algorithmic}
-        \State Node:
-            \State $prevNode \gets$ Integer
-            \State $thisNode \gets$ Integer
-            \State $add \gets$ Boolean
-            \State $potentialFlow \gets$ Integer\\
+    Note if there are $n$ nodes, each node will be indexed from 0 through $n-1$. In the algorithm, the Source node is indexed as 0 while the Sink node is indexed as $n-1$. See Algorithm~\ref{alg:FFSequential}
+
+    \begin{algorithm}
+        \caption{Ford-Fulkerson Pseudo Code}
+        \label{alg:FFSequential}
+        \begin{algorithmic}[1]
+            \Function{augment}{}
+                \State $tN \gets sink node$ 
+                \State $augNum \gets Integer$ 
             
-        
-        \State FordFulkerson:
-            \State $capacity[][] \gets$ Capacity Graph
-            \State $flow[][] \gets$ Flow Graph
-            \State $nodeLabels \gets$ Array of Nodes
-            \State $numNodes \gets$ Number of nodes in graph\\
-            \State $sink \gets$ Integer\\
+                \While {$tN$ is not 0}
+                    \If{$tN.thisNode$}
+                        \State $flow[tN.prevNode][tN.thisNode] \gets$ flow[tN.prevNode][tN.thisNode] + augNum
+                    
+                    \Else \State $flow[tN.thisNode][tN.prevNode] \gets$ flow[tN.thisNode][tN.prevNode] - augNum
+                        
+                    \EndIf
+                    
+                    \State $tN \gets tN$'s previous node
+                \EndWhile
+            \EndFunction\\\\
+    
+            \Function{label}{}
+                \If {$add:$}
+                	\State 
+                	    $pFlow \gets$ min(ith-node's potentialFlow, cap[i][j] - flow[i][j])
+                \Else
+                    \State
+    			        $pFlow \gets$ min(ith-node's potentialFlow, flow[j][i])
+                \EndIf
+            \EndFunction
+        \end{algorithmic}
+        \begin{algorithmic}[1]
+            \State Node:
+                \State $prevNode \gets$ Integer
+                \State $thisNode \gets$ Integer
+                \State $add \gets$ Boolean
+                \State $potentialFlow \gets$ Integer\\
+                
             
-            \For {i in range 2:}
-                \For {i in range numNodes:}
-                    \For {j in range numNodes:}
-                        \If {jth-node is labeled}
-                            \State
-                                \If {ith-node is not labeled and $flow[j][i] < cap[j][i]$}
-                                    Label() where $add$ is true
-                                \EndIf
-                                
-                                \If {ith-node is not labeled and $flow[j][i] >$ 0}
-                                    Label() where $add$ is false
-                                \EndIf
+            \State FordFulkerson:
+                \State $capacity[][] \gets$ Capacity Graph
+                \State $flow[][] \gets$ Flow Graph
+                \State $nodeLabels \gets$ Array of Nodes
+                \State $numNodes \gets$ Number of nodes in graph\\
+                \State $sink \gets$ Integer\\
+                
+                \For {i in range 2:}
+                    \For {i in range numNodes:}
+                        \For {j in range numNodes:}
+                            \If {jth-node is labeled}
+                                \State
+                                    \If {ith-node is not labeled and $flow[j][i] < cap[j][i]$}
+                                        Label() where $add$ is true
+                                    \EndIf
+                                    
+                                    \If {ith-node is not labeled and $flow[j][i] >$ 0}
+                                        Label() where $add$ is false
+                                    \EndIf
+                            \EndIf
+                        \EndFor
+                        
+                        \If{sink node is labeled}
+                            Augment()
+                            then do outermost for-loop again
                         \EndIf
                     \EndFor
-                    
-                    \If{sink node is labeled}
-                        Augment()
-                        then do outermost for-loop again
-                    \EndIf
-                \EndFor
-            \EndFor\\
-            
-            End algorithm\\\\
+                \EndFor\\
+            \end{algorithmic}
+        \end{algorithm}
 
-        \Function{augment}{}
-            \State $tN \gets sink node$ 
-            \State $augNum \gets Integer$ 
-        
-            \While {$tN$ is not 0}
-                \If{$tN.thisNode$}
-                    \State $flow[tN.prevNode][tN.thisNode] \gets$ flow[tN.prevNode][tN.thisNode] + augNum
-                
-                \Else \State $flow[tN.thisNode][tN.prevNode] \gets$ flow[tN.thisNode][tN.prevNode] - augNum
-                    
-                \EndIf
-                
-                \State $tN \gets tN$'s previous node
-            \EndWhile
-        \EndFunction\\\\
-
-        \Function{label}{}
-            \If {$add:$}
-            	\State 
-            	    $pFlow \gets$ min(ith-node's potentialFlow, cap[i][j] - flow[i][j])
-            \Else
-                \State
-			        $pFlow \gets$ min(ith-node's potentialFlow, flow[j][i])
-            \EndIf
-        \EndFunction
-    \end{algorithmic}
 \subsection{Parallel Algorithm}
     \subsubsection{Research}
         The approach used in a parallel algorithm of Ford-Fulkerson already posed intimidating challenges. Unlike its sibling algorithms, Edmond-Karp in particular, FF is traditionally implemented using DFS, not breadth-first-search (BFS). Without the luxury of a an easily-parallelizable algorithm, research had to be done to convert a recursive DFS approach into an iterative one.
@@ -151,14 +158,14 @@
         
         Initially, the threads will be at X:cap[0][1] and Y:cap[0][2] (Note that the Source node column (cap[\_][0]) can be skipped since there are no incoming edges to the source node. So the threads can be X:cap[0][0] and Y:cap[0][1] but it is not done here in the example as it is not as helpful for demonstration nor is it efficient). The two threads will then sweep through the rows from top-to-bottom in order to label nodes.
         
-        A label will be in the form of a tuple (Ex. (A, +, 6)) which describe, respectively, what node it came from, what operation (add or subtract) to do when augmenting, and the potential flow of the labeled node. Some things to note is that the Source node is always labeled as (\_, +, $\infty$); once the Sink node is labeled, start the augmentation of the graph by backtracking through the labels of the nodes and use the potential flow labeled on the Sink node when augmenting each of the edges. \newline
+        A label will be in the form of a tuple (Ex. (A, +, 6)) which describe, respectively, what node it came from, what operation (add or subtract) to do when augmenting, and the potential flow of the labeled node. Some things to note is that the Source node is always labeled as (\_, +, $\infty$); once the Sink node is labeled, start the augmentation of the graph by backtracking through the labels of the nodes and use the potential flow labeled on the Sink node when augmenting each of the edges.
         
         We only label a node if it is not already labeled and:
         \begin{enumerate}
             \item (Forward Edge) The flow of the edge from previous node (prev) to current node (curr) is less than the capacity from prev to curr.\newline
             For i, j, where they are the index of the prev node and curr node respectively, $flow[i][j] < cap[i][j]$. This would result in a labeling of (prev, +, min\{prevPotentialFlow, cap[i][j] - flow[i][j]\}). prevPotentialFlow is simply the third item of the tuple in the label of the previous node.
             \item (Backward Edge) The flow of the edge from the curr node to the prev node is greater than 0.\newline
-            For i, j, where they are the index of the prev node and curr node respectively, $flow[j][i] > 0$. This would result in a labeling of (prev, -, min\{prevPotentialFlow, flow[j][i]\})\newline
+            For i, j, where they are the index of the prev node and curr node respectively, $flow[j][i] > 0$. This would result in a labeling of (prev, -, min\{prevPotentialFlow, flow[j][i]\})
         \end{enumerate}
         
         Using the rules above, for thread X currently at X:cap[0][1], X will label node $A$ because the previous node $S$ is labeled (with (\_, +, $\infty$)) and $X:flow[0][1] < X:cap[0][1]$. With this, node $A$ will be labeled with (S, +, 6). For thread Y currently at Y:cap[0][2], Y will label node $B$ because the previous node $S$ is labeled and $Y:flow[0][1] < Y:cap[0][2]$. Hence, node $B$ will be labeled with (S, +, 3). The graph and matrix are shown below.
@@ -234,75 +241,51 @@
         Hence, the max flow of the graph in this example is 7.
         
     \subsubsection{Pseudo Code of Parallel}
-        Note if there are $n$ nodes, each node will be indexed from 0 through $n-1$. In the algorithm, the Source node is indexed as 0 while the Sink node is indexed as $n-1$
-        \begin{algorithmic}
-            \State Node:
-                \State $prevNode \gets$ Integer
-                \State $thisNode \gets$ Integer
-                \State $add \gets$ Boolean
-                \State $potentialFlow \gets$ Integer\\
-                
-            \State FordFulkerson:
-                \State $row \gets$ AtomicInteger
-                \State $capacity[][] \gets$ Capacity Graph
-                \State $flow[][] \gets$ Flow Graph
-                \State $nodeLabels[] \gets$ Array of Nodes
-                \State $numNodes \gets$ number of nodes in graph
-                \State $threadLimit \gets$ Max number of threads
-                \State $tNum \gets$ Identifying Thread number 0-indexed
-                \\
-                
-                \For {offset in range numNodes:}
-                    \State i $\gets$ ((offset * threadLimit) + tNum) \% numNodes
-                    \For {$row$ in range numNodes:}
-                        \State j $\gets row$
-                        \If {jth-node is labeled}
-                            \State
-                                \If {ith-node is not labeled and $flow[j][i] < cap[j][i]$}
-                                    Label() where $add$ is true
-                                \EndIf
-                                
-                                \If {ith-node is not labeled and $flow[j][i] >$ 0}
-                                    Label() where $add$ is false
-                                \EndIf
+        Note if there are $n$ nodes, each node will be indexed from 0 through $n-1$. In the algorithm, the Source node is indexed as 0 while the Sink node is indexed as $n-1$. See Algorithm~\ref{alg:FFParallel}. See Algorithm~\ref{alg:FFSequential} for the Augment and Label functions.
+        \begin{algorithm}
+            \caption{Ford-Fulkerson Pseudo Code}
+            \label{alg:FFParallel}
+            \begin{algorithmic}[1]
+                \State Node:
+                    \State $prevNode \gets$ Integer
+                    \State $thisNode \gets$ Integer
+                    \State $add \gets$ Boolean
+                    \State $potentialFlow \gets$ Integer\\
+                    
+                \State FordFulkerson:
+                    \State $row \gets$ AtomicInteger
+                    \State $capacity[][] \gets$ Capacity Graph
+                    \State $flow[][] \gets$ Flow Graph
+                    \State $nodeLabels[] \gets$ Array of Nodes
+                    \State $numNodes \gets$ number of nodes in graph
+                    \State $threadLimit \gets$ Max number of threads
+                    \State $tNum \gets$ Identifying Thread number 0-indexed
+                    \\
+                    
+                    \For {offset in range numNodes:}
+                        \State i $\gets$ ((offset * threadLimit) + tNum) \% numNodes
+                        \For {$row$ in range numNodes:}
+                            \State j $\gets row$
+                            \If {jth-node is labeled}
+                                \State
+                                    \If {ith-node is not labeled and $flow[j][i] < cap[j][i]$}
+                                        Label() where $add$ is true
+                                    \EndIf
+                                    
+                                    \If {ith-node is not labeled and $flow[j][i] >$ 0}
+                                        Label() where $add$ is false
+                                    \EndIf
+                            \EndIf\\
+                            waitForAllThreadsBeforeProceeding()
+                        \EndFor
+                        \If{sink node is labeled}
+                            Only one thread Augment()\\
+                            waitForAllThreadsBeforeProceeding()\\
+                            do outermost for-loop again
                         \EndIf\\
-                        waitForAllThreadsBeforeProceeding()
-                    \EndFor
-                    \If{sink node is labeled}
-                        Only one thread Augment()\\
-                        waitForAllThreadsBeforeProceeding()\\
-                        do outermost for-loop again
-                    \EndIf\\
-                \EndFor\\
-                
-                End algorithm\\\\
-                
-            \Function{augment}{}
-                \State $tN \gets sink node$ 
-                \State $augNum \gets Integer$ 
-            
-                \While {$tN$ is not 0}
-                    \If{$tN.thisNode$}
-                        \State $flow[tN.prevNode][tN.thisNode] \gets$ flow[tN.prevNode][tN.thisNode] + augNum
-                    
-                    \Else \State $flow[tN.thisNode][tN.prevNode] \gets$ flow[tN.thisNode][tN.prevNode] - augNum
-                        
-                    \EndIf
-                    
-                    \State $tN \gets tN$'s previous node
-                \EndWhile
-            \EndFunction\\\\
-    
-            \Function{label}{}
-                \If {$add:$}
-                	\State 
-                	    $pFlow \gets$ min(ith-node's potentialFlow, cap[i][j] - flow[i][j])
-                \Else
-                    \State
-    			        $pFlow \gets$ min(ith-node's potentialFlow, flow[j][i])
-                \EndIf
-            \EndFunction
+                    \EndFor\\
             \end{algorithmic}\\
+        \end{algorithm}
 
 \subsection{Testing \& Result}
     These test results were performed on UCF's Eustis3 server utilizing open-source datasets \cite{sumitpadhiyar}
