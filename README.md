@@ -17,9 +17,13 @@ The following are the algorithms and the group members working on making it para
 The testing datasets 50v.in through 1000v.in come from <https://github.com/SumitPadhiyar/parallel_ford_fulkerson_gpu/tree/master/dataset>. An important thing to note about the datasets we are using is that the source node is 0 and the sink node is n-1. (n is number of nodes in the set)
 
 To run a program, follow the following paradigm:
-`$ java FordFulkerson.java`
+<br />
+`$ javac FordFulkerson`
+<br />
+`$ java FordFulkerson`
 
 It will ask for a path:
+<br />
 `$ ../dataset/50v.in`
 
 ### Expected Maxflow Output for following datasets:
