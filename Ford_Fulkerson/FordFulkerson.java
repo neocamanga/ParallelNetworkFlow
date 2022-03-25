@@ -75,7 +75,7 @@ public class FordFulkerson implements Runnable {
 			File myObj = new File(filename);
 			Scanner myReader = new Scanner(myObj);
 			numNodes = myReader.nextInt();
-			System.out.println(numNodes);
+			// System.out.println(numNodes);
 			sink = numNodes - 1;
 
 			cap = new int[numNodes][numNodes];
