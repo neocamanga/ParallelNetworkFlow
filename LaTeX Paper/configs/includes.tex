@@ -1,0 +1,60 @@
+%Use esse arquivo para incluir novos pacotes
+
+\usepackage[%usado para determinar medidas
+top=1.78cm,
+bottom=1.78cm,
+left=1.65cm,
+right=1.65cm,
+headsep=0cm,
+%showframe
+]{geometry}
+%\usepackage[justification=centering]{caption}
+\usepackage{times}
+\usepackage{enumitem}%redefinir espacos itemize
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage{url,hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage{float}%mais controle para manipular figuras
+\usepackage{caption}%manipular legenda da figura e tabela
+\usepackage{mathtools}%equacoes
+\usepackage[hang,flushmargin]{footmisc}
+\usepackage{xcolor}
+\usepackage{wrapfig} %usado para envolver figura com texto
+%\usepackage[portuguese]{babel}
+\usepackage{fancyhdr}%criacao do cabecalho
+\usepackage{etoolbox}
+\usepackage[export]{adjustbox}%mais controle para ajustar tamanho da tabela
+\usepackage{comment}%ambiente para comentario
+\usepackage{relsize} %usado por comandos \mathlarger
+\usepackage{lipsum} 
+\usepackage{algpseudocode}
+\usepackage{blkarray}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\usepackage{listings}
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+% References
+\usepackage{biblatex}
+\addbibresource{references.bib}
+
+%Idioma. Use "english" para trabalhos em inglês
+\usepackage[english]{babel}

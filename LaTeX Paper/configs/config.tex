@@ -1,0 +1,33 @@
+%Ajustes na legenda da figura. Incluindo espacamento apos a legenda
+\captionsetup[figure]{labelformat={default},labelsep=period,font=footnotesize, name=\footnotesize{Fig.},justification=centering,singlelinecheck=false,belowskip=0\normalbaselineskip}
+%\pagenumbering{gobble}
+
+%Ajustes na legenda da tabela. 
+\captionsetup[table]{labelformat={default},labelsep=newline,font={sc,footnotesize},justification=centering,singlelinecheck=false}
+
+%\renewcommand{\headrulewidth}{0pt}
+
+\makeatletter
+\newcommand{\linebreakand}{%
+  \baselineskip 
+  \end{@IEEEauthorhalign}
+  \hfill\mbox{}\par
+  \mbox{}\hfill\begin{@IEEEauthorhalign}
+}
+\makeatother
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    Configuracaoes de Idioma
+%    Considerando babel = brazil
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\addto\captionsbrazil{
+  \renewcommand{\abstractname}{Abstract}
+  \renewcommand{\tablename}{TABELA}
+}
+
+%considerando babel = english
+\addto\captionsenglish{
+  \renewcommand{\tablename}{TABLE}
+}
