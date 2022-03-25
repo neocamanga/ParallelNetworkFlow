@@ -8,6 +8,8 @@
 
 import static java.lang.Math.min;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Dinics {
@@ -97,7 +99,7 @@ public class Dinics {
          */
         public void addEdge(int from, int to, long capacity) {
             // if (capacity <= 0)
-            //     throw new IllegalArgumentException("Forward edge capacity <= 0");
+            // throw new IllegalArgumentException("Forward edge capacity <= 0");
             Edge e1 = new Edge(from, to, capacity);
             Edge e2 = new Edge(to, from, 0);
             e1.residual = e2;
@@ -216,22 +218,35 @@ public class Dinics {
     }
 
     public static void main(String[] args) {
-        Scanner kb = new Scanner(System.in);
-        int n = kb.nextInt();
-        int s = 0;
-        int t = n - 1;
+        System.out.println("Enter dataset path:");
+        Scanner scan = new Scanner(System.in); // Create a Scanner object
+        String filename = scan.nextLine();
 
-        NetworkFlowSolverBase solver;
-        solver = new DinicsSolver(n, s, t);
+        scan.close();
+        File myObj = new File(filename);
+        Scanner kb;
+        try {
+            kb = new Scanner(myObj);
+            int n = kb.nextInt();
+            int s = 0;
+            int t = n - 1;
 
-        while(kb.hasNext()){
+            NetworkFlowSolverBase solver;
+            solver = new DinicsSolver(n, s, t);
+
+            while(kb.hasNext()){
             solver.addEdge(kb.nextInt(), kb.nextInt(), kb.nextInt());
-        }
+            }
 
-        // Prints: "Maximum flow: 30"
-        long timeStart = System.currentTimeMillis();
-        System.out.printf("Maximum flow: %d\n", solver.getMaxFlow());
-        long timeEnd = System.currentTimeMillis();
-        System.out.println("Execution time: " + (timeEnd - timeStart) + "ms");
+            // Prints: "Maximum flow: 30"
+            long timeStart = System.currentTimeMillis();
+            System.out.printf("Maximum flow: %d\n", solver.getMaxFlow());
+            long timeEnd = System.currentTimeMillis();
+            System.out.println("Execution time: " + (timeEnd - timeStart) + "ms");
+            kb.close();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

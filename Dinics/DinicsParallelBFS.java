@@ -8,6 +8,8 @@
 
 import static java.lang.Math.min;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -105,7 +107,7 @@ public class DinicsParallelBFS {
          */
         public void addEdge(int from, int to, long capacity) {
             // if (capacity <= 0)
-            //     throw new IllegalArgumentException("Forward edge capacity <= 0");
+            // throw new IllegalArgumentException("Forward edge capacity <= 0");
             Edge e1 = new Edge(from, to, capacity);
             Edge e2 = new Edge(to, from, 0);
             e1.residual = e2;
@@ -192,15 +194,15 @@ public class DinicsParallelBFS {
             for (int i = 0; i < numThreads; i++) {
                 service.submit(new BFSHelper());
             }
-            
+
             service.shutdown();
 
-            try{
+            try {
                 service.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
-            } catch(Throwable e) {
+            } catch (Throwable e) {
                 System.out.println(e);
             }
-    
+
             // Return whether we were able to reach the sink node.
             return level[t] != -1;
         }
@@ -209,7 +211,7 @@ public class DinicsParallelBFS {
             public void run() {
                 boolean firstEntry = true;
                 while (firstEntry || runIndex.equals(new AtomicInteger(0))) {
-                    
+
                     // System.out.println(Thread.currentThread().getId());
                     firstEntry = false;
                     try {
@@ -224,11 +226,10 @@ public class DinicsParallelBFS {
                                 }
                             }
                         }
-                    } 
-                    finally {
+                    } finally {
                         runIndex.getAndDecrement();
                     }
-                    
+
                 }
             }
         }
@@ -255,23 +256,36 @@ public class DinicsParallelBFS {
     }
 
     public static void main(String[] args) {
-        Scanner kb = new Scanner(System.in);
-        int n = kb.nextInt();
-        int s = 0;
-        int t = n - 1;
+        System.out.println("Enter dataset path:");
+        Scanner scan = new Scanner(System.in); // Create a Scanner object
+        String filename = scan.nextLine();
 
-        NetworkFlowSolverBase solver;
-        solver = new DinicsSolver(n, s, t);
+        scan.close();
+        File myObj = new File(filename);
+        Scanner kb;
+        try {
+            kb = new Scanner(myObj);
+            int n = kb.nextInt();
+            int s = 0;
+            int t = n - 1;
 
-        while(kb.hasNext()){
-            solver.addEdge(kb.nextInt(), kb.nextInt(), kb.nextInt());
+            NetworkFlowSolverBase solver;
+            solver = new DinicsSolver(n, s, t);
+
+            while (kb.hasNext()) {
+                solver.addEdge(kb.nextInt(), kb.nextInt(), kb.nextInt());
+            }
+
+            // Prints: "Maximum flow: 30"
+
+            long timeStart = System.currentTimeMillis();
+            System.out.printf("Maximum flow: %d\n", solver.getMaxFlow());
+            long timeEnd = System.currentTimeMillis();
+            System.out.println("Execution time: " + (timeEnd - timeStart) + "ms");
+            kb.close();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
-
-        // Prints: "Maximum flow: 30"
-
-        long timeStart = System.currentTimeMillis();
-        System.out.printf("Maximum flow: %d\n", solver.getMaxFlow());
-        long timeEnd = System.currentTimeMillis();
-        System.out.println("Execution time: " + (timeEnd - timeStart) + "ms");
     }
 }

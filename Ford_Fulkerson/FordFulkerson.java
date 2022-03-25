@@ -55,11 +55,11 @@ public class FordFulkerson implements Runnable {
 		// numNodes = nodeInput.nextInt();
 		// numNodes = scan.nextInt();
 
-		System.out.println("Enter the thread limit (defaults to 8):");
+		// System.out.println("Enter the thread limit (defaults to 8):");
 		// Scanner threadInput = new Scanner(System.in); // Create a Scanner object
 		// threadLimit = threadInput.nextInt();
 
-		threadLimit = scan.nextInt();
+		// threadLimit = scan.nextInt();
 
 		System.out.println(filename + " " + numNodes + ":" + sink);
 		scan.close();
