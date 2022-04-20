@@ -24,17 +24,30 @@ public class FordFulkersonParallel {
     public static AtomicInteger waitForThreads = new AtomicInteger(0);
     public static CyclicBarrier barrier;
     public static boolean isReady;
+    public static String filename;
 
     public static void main(String[] args) {
-        initialize();
-        // printGraph();
-        final long startTime = System.currentTimeMillis();
-        multiThreadFF();
-        final long endTime = System.currentTimeMillis();
-        // totalTime += endTime - startTime;
-        // printGraph(flow);
-        long executionTime = endTime - startTime;
-        System.out.println(executionTime + " milliseconds to finish Ford-Fulkerson.");
+        timeAverage(1);
+    }
+
+    private static void timeAverage(int n) {
+        long totalTime = 0;
+
+        for (int i = 0; i < n; i++) {
+            initialize();
+
+            final long startTime = System.currentTimeMillis();
+            multiThreadFF();
+            final long endTime = System.currentTimeMillis();
+            totalTime += endTime - startTime;
+        }
+
+        System.out.println("===================================");
+        if (n != 1)
+            System.out.print("Average Time of " + n + " runs: ");
+
+        System.out.println((totalTime / n) + " milliseconds to finish Ford-Fulkerson.");
+        System.out.println("===================================");
     }
 
     public static void barrierWait() {
@@ -47,7 +60,8 @@ public class FordFulkersonParallel {
     }
 
     public static void initialize() {
-        String filename = getInput();
+        if (filename == null)
+            filename = getInput();
 
         if (filename.length() > 0)
             createGraph(filename);
@@ -60,7 +74,6 @@ public class FordFulkersonParallel {
         Scanner scan = new Scanner(System.in); // Create a Scanner object
         String filename = scan.nextLine();
 
-        System.out.println(filename + " " + numNodes + ":" + sink);
         scan.close();
 
         return filename;
@@ -86,7 +99,9 @@ public class FordFulkersonParallel {
                 // Thread.sleep(1000);
                 add(fromNode, toNode, capacity);
             }
+
             myReader.close();
+            System.out.println(filename + " " + numNodes + ":" + sink);
         } catch (FileNotFoundException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
@@ -94,12 +109,9 @@ public class FordFulkersonParallel {
     }
 
     public static void printGraph(int[][] graph) {
-        for (int i = 0; i < graph.length; i++) {
-            for (int j = 0; j < graph[i].length; j++) {
-                System.out.print(graph[i][j] + " ");
-            }
-            System.out.println();
-        }
+        for (int i = 0; i < graph.length; i++)
+            for (int j = 0; j < graph[i].length; j++)
+                System.out.print(graph[i][j] + (j == (graph[i].length - 1) ? "\n" : " "));
     }
 
     // Adds an edge from v1 -> v2 with capacity c.
@@ -154,12 +166,12 @@ class Traverse extends FordFulkersonParallel implements Runnable {
     private int colLimit = numNodes * 2;
 
     private int deviation = numNodes / NUM_THREAD;
+
     public Traverse(int tNum) {
         this.tNum = tNum;
     }
 
     public boolean iterateMultiFF() {
-
         // Outer for loop cycles through columns (To Node)
         for (int col = tNum * deviation, c = 0; c < colLimit; col = (col + 1) % numNodes, c++) {
             // Inner for loop cycles through row. (From Node)
