@@ -30,8 +30,8 @@ public class FordFulkerson implements Runnable {
 	public static void main(String[] args) {
 		initialize();
 		// printGraph();
-		// singleThreadFF();
-		multiThreadFF();
+		singleThreadFF();
+		// multiThreadFF();
 		printGraph(flow);
 	}
 
@@ -141,27 +141,27 @@ public class FordFulkerson implements Runnable {
 		return maxFlow;
 	}
 
-	public static void multiThreadFF() {
-		Thread[] threads;
+	// public static void multiThreadFF() {
+	// 	Thread[] threads;
 
-		// Limiting the amount of threads depending on however many total nodes that we have
-		if (NUM_THREAD > numNodes)
-			NUM_THREAD = numNodes;
+	// 	// Limiting the amount of threads depending on however many total nodes that we have
+	// 	if (NUM_THREAD > numNodes)
+	// 		NUM_THREAD = numNodes;
 
-		barrier = new CyclicBarrier(NUM_THREAD);
-		threads = new Thread[NUM_THREAD];
+	// 	barrier = new CyclicBarrier(NUM_THREAD);
+	// 	threads = new Thread[NUM_THREAD];
 
-		for (int i = 0; i < NUM_THREAD; i++) {
-			threads[i] = new Thread(new FordFulkersonParallel(i));
-			threads[i].start();
-		}
+	// 	for (int i = 0; i < NUM_THREAD; i++) {
+	// 		threads[i] = new Thread(new FordFulkersonParallel(i));
+	// 		threads[i].start();
+	// 	}
 
-		isReady = true;
+	// 	isReady = true;
 
-		while (threads[0].isAlive()) { }
+	// 	while (threads[0].isAlive()) { }
 
-		System.out.println(getMaxFlow());
-	}
+	// 	System.out.println(getMaxFlow());
+	// }
 
 	public static boolean iterateFF() {
 
