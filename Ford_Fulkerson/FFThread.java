@@ -10,7 +10,7 @@ public class FFThread extends FordFulkerson {
 
 	public boolean iterateMultiFF() {
 		// Starts on source row. This allows us to label other nodes
-		for (int i = tNum; i - tNum < numNodes; i = (i + 1) % threadLimit) {
+		for (int i = tNum; i - tNum < numNodes; i = (i + 1) % NUM_THREAD) {
 			// Once this for-loop ends, we reach the sink node
 			for (column.set(0); column.get() < numNodes; column.getAndIncrement()) {
 
@@ -51,8 +51,8 @@ public class FFThread extends FordFulkerson {
 	}
 
 	public static void resetLabels() {
-		nodeLabels = new Node[numNodes];
-		nodeLabels[0] = new Node();
+		nodeLabels = new NodeFF[numNodes];
+		nodeLabels[0] = new NodeFF();
 	}
 
 	public static void label(int i, boolean add, int j) {
@@ -67,7 +67,7 @@ public class FFThread extends FordFulkerson {
 			pFlow = min(nodeLabels[i].potentialFlow, flow[j][i]);
 		}
 
-		nodeLabels[j] = new Node(i, add, j, pFlow);
+		nodeLabels[j] = new NodeFF(i, add, j, pFlow);
 
 		lock.unlock();
 	}
@@ -78,7 +78,7 @@ public class FFThread extends FordFulkerson {
 
 	public static void augment() {
 		// tN - traverseNode
-		Node tN = nodeLabels[sink]; // Start at sink
+		NodeFF tN = nodeLabels[sink]; // Start at sink
 		int augNum = tN.potentialFlow;
 
 		while (tN.thisNode != 0) {
