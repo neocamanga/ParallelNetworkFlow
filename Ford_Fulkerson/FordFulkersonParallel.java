@@ -27,7 +27,7 @@ public class FordFulkersonParallel {
     public static String filename;
 
     public static void main(String[] args) {
-        timeAverage(1);
+        timeAverage(3);
     }
 
     private static void timeAverage(int n) {
