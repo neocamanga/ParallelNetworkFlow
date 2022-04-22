@@ -3,7 +3,10 @@
  * Implementation of Dinic's network flow algorithm. The algorithm works by first constructing a
  * level graph using a BFS and then finding augmenting paths on the level graph using multiple DFSs.
  *
- * <p>Time Complexity: O(EV²)
+ * Time Complexity: O(EV²)
+ * 
+ * William Fiset's template code for Dinics sequential was used to construct this parallel version:
+ * https://github.com/williamfiset/Algorithms/blob/master/src/main/java/com/williamfiset/algorithms/graphtheory/networkflow/examples/DinicsExample.java
  */
 
 import static java.lang.Math.min;
@@ -196,8 +199,8 @@ public class DinicsParallelBFSDFS {
         
         static class DFSHelper extends DinicsParallelBFSDFS implements Runnable {
             private int limit = MIN_DELAY;
-            private static final int MIN_DELAY = 10;
-            private static final int MAX_DELAY = 1000;
+            private static final int MIN_DELAY = 1;
+            private static final int MAX_DELAY = 25;
             // To avoid overflow, set infinity to a value less than Long.MAX_VALUE;
             final long INF = Long.MAX_VALUE / 2;
             // Inputs: n = number of nodes, s = source, t = sink
