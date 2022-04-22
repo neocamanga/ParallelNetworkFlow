@@ -12,11 +12,11 @@ public class EdmondsKarpSequential
 {
     public static void main(String[] args)
     {
-		long start = System.currentTimeMillis();
-        Graph graph = new Graph();
-
+		Graph graph = new Graph();
+		
         int maxFlow = 0;
-
+		
+		long start = System.currentTimeMillis();
         while (true)
         {
             Edge[] path = graph.getAugPath();

@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * COP4520
  * Network Flow Parallelization Project 
  */
-public class EdmondsKarpParallel implements Runnable
+public class InitialEdmondsKarpParallel implements Runnable
 {
 	public int maxFlow = 0;
 	Graph graph = new Graph();
@@ -58,8 +58,8 @@ public class EdmondsKarpParallel implements Runnable
 	{
 		try
 		{
+			InitialEdmondsKarpParallel ek = new InitialEdmondsKarpParallel();
 			long start = System.currentTimeMillis();
-			EdmondsKarpParallel ek = new EdmondsKarpParallel();
 			Thread thread1 = new Thread(ek);
 			thread1.start();
 			thread1.join();
@@ -69,21 +69,21 @@ public class EdmondsKarpParallel implements Runnable
 			Thread thread3 = new Thread(ek);
 			thread3.start();
 			thread3.join();
-			// Thread thread4 = new Thread(ek);
-			// thread4.start();
-			// thread4.join();
-			// Thread thread5 = new Thread(ek);
-			// thread5.start();
-			// thread5.join();
-			// Thread thread6 = new Thread(ek);
-			// thread6.start();
-			// thread6.join();
-			// Thread thread7 = new Thread(ek);
-			// thread7.start();
-			// thread7.join();
-			// Thread thread8 = new Thread(ek);
-			// thread8.start();
-			// thread8.join();
+			Thread thread4 = new Thread(ek);
+			thread4.start();
+			thread4.join();
+			Thread thread5 = new Thread(ek);
+			thread5.start();
+			thread5.join();
+			Thread thread6 = new Thread(ek);
+			thread6.start();
+			thread6.join();
+			Thread thread7 = new Thread(ek);
+			thread7.start();
+			thread7.join();
+			Thread thread8 = new Thread(ek);
+			thread8.start();
+			thread8.join();
 			long end = System.currentTimeMillis();
 			System.out.println("Max flow: " + ek.maxFlow);
 			System.out.println("Execution time: " + (end - start));
