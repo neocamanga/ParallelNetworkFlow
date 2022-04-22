@@ -1,6 +1,8 @@
 import java.io.File; // Import the File class
 import java.io.FileNotFoundException; // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
@@ -9,31 +11,42 @@ import java.util.*;
 public class FordFulkerson implements Runnable {
 
 	// labels of nodes
-	static public Node[] nodeLabels;
+	public static NodeFF[] nodeLabels;
 
 	// Stores graph.
-	static public int[][] cap;
-	static public int[][] flow;
-	static public int numNodes;
-	static public int source = 0;
-	static public int sink;
-	static public int threadLimit = 8;
-	static public ReentrantLock lock = new ReentrantLock();
-	static public AtomicInteger column = new AtomicInteger(0);
-	static public AtomicBoolean isAugmented = new AtomicBoolean(false);
-	static public AtomicInteger waitForThreads = new AtomicInteger(0);
-	static public boolean isReady;
+	public static int NUM_THREAD = 2;
+	public static int[][] cap;
+	public static int[][] flow;
+	public static int numNodes;
+	public static int source = 0;
+	public static int sink;
+	public static ReentrantLock lock = new ReentrantLock();
+	public static AtomicInteger column = new AtomicInteger(0);
+	public static AtomicBoolean isAugmented = new AtomicBoolean(false);
+	public static AtomicInteger waitForThreads = new AtomicInteger(0);
+	public static CyclicBarrier barrier;
+	public static boolean isReady;
 
 	public static void main(String[] args) {
 		initialize();
 		// printGraph();
 		singleThreadFF();
 		// multiThreadFF();
+		printGraph(flow);
 	}
 
 	public void run()
 	{
 		;
+	}
+
+	public static void barrierWait() {
+		try {
+			barrier.await();
+		} catch (InterruptedException | BrokenBarrierException e) {
+			// e.printStackTrace();
+			System.err.println("A sensor was too slow at an iteration");
+		}
 	}
 
 	public static void initialize() {
@@ -97,11 +110,10 @@ public class FordFulkerson implements Runnable {
 		}
 	}
 
-	public static void printGraph() {
-
-		for (int i = 0; i < cap.length; i++) {
-			for (int j = 0; j < cap[i].length; j++) {
-				System.out.print(cap[i][j] + " ");
+	public static void printGraph(int[][] graph) {
+		for (int i = 0; i < graph.length; i++) {
+			for (int j = 0; j < graph[i].length; j++) {
+				System.out.print(graph[i][j] + " ");
 			}
 			System.out.println();
 		}
@@ -129,26 +141,27 @@ public class FordFulkerson implements Runnable {
 		return maxFlow;
 	}
 
-	public static void multiThreadFF() {
-		Thread[] threads;
+	// public static void multiThreadFF() {
+	// 	Thread[] threads;
 
-		// Limiting the amount of threads depending on however many total nodes that we have
-		if (threadLimit > numNodes)
-			threadLimit = numNodes;
+	// 	// Limiting the amount of threads depending on however many total nodes that we have
+	// 	if (NUM_THREAD > numNodes)
+	// 		NUM_THREAD = numNodes;
 
-		threads = new Thread[threadLimit];
+	// 	barrier = new CyclicBarrier(NUM_THREAD);
+	// 	threads = new Thread[NUM_THREAD];
 
-		for (int i = 0; i < numNodes; i++) {
-			threads[i] = new Thread(new FFThread(i));
-			threads[i].start();
-		}
+	// 	for (int i = 0; i < NUM_THREAD; i++) {
+	// 		threads[i] = new Thread(new FordFulkersonParallel(i));
+	// 		threads[i].start();
+	// 	}
 
-		isReady = true;
+	// 	isReady = true;
 
-		while (threads[0].isAlive()) { }
+	// 	while (threads[0].isAlive()) { }
 
-		System.out.println(getMaxFlow());
-	}
+	// 	System.out.println(getMaxFlow());
+	// }
 
 	public static boolean iterateFF() {
 
@@ -185,20 +198,20 @@ public class FordFulkerson implements Runnable {
 	}
 
 	public static void resetLabels() {
-		nodeLabels = new Node[numNodes];
-		nodeLabels[0] = new Node();
+		nodeLabels = new NodeFF[numNodes];
+		nodeLabels[0] = new NodeFF();
 	}
 
-	public static void label(int i, boolean add, int j) {
+	public static void label(int row, boolean add, int col) {
 		int pFlow;
 
 		if (add) {
-			pFlow = min(nodeLabels[i].potentialFlow, cap[i][j] - flow[i][j]);
+			pFlow = min(nodeLabels[row].potentialFlow, cap[row][col] - flow[row][col]);
 		} else {
-			pFlow = min(nodeLabels[i].potentialFlow, flow[j][i]);
+			pFlow = min(nodeLabels[row].potentialFlow, flow[col][row]);
 		}
 
-		nodeLabels[j] = new Node(i, add, j, pFlow);
+		nodeLabels[col] = new NodeFF(row, add, col, pFlow);
 	}
 
 	public static int min(int a, int b) {
@@ -207,7 +220,7 @@ public class FordFulkerson implements Runnable {
 
 	public static void augment() {
 		// tN - traverseNode
-		Node tN = nodeLabels[sink]; // Start at sink
+		NodeFF tN = nodeLabels[sink]; // Start at sink
 		int augNum = tN.potentialFlow;
 
 		while (tN.thisNode != 0) {
