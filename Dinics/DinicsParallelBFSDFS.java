@@ -16,9 +16,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
-public class DinicsParallelBFS {
-
+public class DinicsParallelBFSDFS {
+    public static AtomicIntegerArray lockNode;
     public static final AtomicInteger runIndex = new AtomicInteger(0);
     public static ArrayBlockingQueue<Integer> q;
     public static int[] level;
@@ -72,7 +73,7 @@ public class DinicsParallelBFS {
         protected boolean solved;
 
         // The maximum flow. Calculated by calling the {@link #solve} method.
-        protected long maxFlow;
+        protected static long maxFlow;
 
         /**
          * Creates an instance of a flow network solver. Use the {@link #addEdge} method
@@ -171,15 +172,109 @@ public class DinicsParallelBFS {
             // of the DFS
             // phase.
             int[] next = new int[n];
-
+            
             while (bfs()) {
                 Arrays.fill(next, 0);
+                // Find max flow by adding all augmenting path flows using all threads
+                int numThreads = 16;
+                ExecutorService service = Executors.newFixedThreadPool(numThreads);
+                for (int i = 0; i < numThreads; i++) {
+                    service.submit(new DFSHelper(s, next, t));
+                }
+
+                service.shutdown();
+
+                try {
+                    service.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+                } catch (Throwable e) {
+                    System.out.println(e);
+                }                  
+
+            }
+        }
+
+        
+        static class DFSHelper extends DinicsParallelBFSDFS implements Runnable {
+            private int limit = MIN_DELAY;
+            private static final int MIN_DELAY = 10;
+            private static final int MAX_DELAY = 1000;
+            // To avoid overflow, set infinity to a value less than Long.MAX_VALUE;
+            final long INF = Long.MAX_VALUE / 2;
+            // Inputs: n = number of nodes, s = source, t = sink
+            final int s, t;
+            int[] next;
+            DFSHelper(int s, int[] next, int t) {
+                this.s = s;
+                this.t = t;
+                this.next = next;
+            }
+            public void run() {
                 // Find max flow by adding all augmenting path flows.
                 for (long f = dfs(s, next, INF); f != 0; f = dfs(s, next, INF)) {
                     maxFlow += f;
+                }            
+            }
+            private long dfs(int at, int[] next, long flow) {
+                if (at == t)
+                    return flow;
+                final int numEdges = graph[at].size();
+
+                for (; next[at] < numEdges; next[at]++) {
+                    Edge edge = graph[at].get(next[at]);
+                    long cap = edge.remainingCapacity();
+                    if (cap > 0 && level[edge.to] == level[at] + 1) {
+                        this.lock(edge.to);
+                        try {
+                            cap = edge.remainingCapacity();
+                            if (cap > 0 && level[edge.to] == level[at] + 1) {
+                                long bottleNeck = dfs(edge.to, next, min(flow, cap));
+                                if (bottleNeck > 0) {
+                                    edge.augment(bottleNeck);
+                                    return bottleNeck;
+                                }
+                            }
+                        } catch(Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            this.unlock(edge.to);
+                        }
+                    }
+                }
+                return 0;
+            }
+
+            public void backoff() {
+                Random random = new Random();
+                try {
+                int delay = random.nextInt(limit); 
+                limit = Math.min(MAX_DELAY, 2 * limit); 
+                Thread.sleep(delay);
+                } catch (Exception e) {
+                System.out.println(e);
+                }
+            } 
+
+            public void lock(int nodeNumber) {
+                while (true) {
+                    while (lockNode.get(nodeNumber) == 1) {//System.out.println(nodeNumber + " node is busy");
+                    };
+                    if (lockNode.compareAndSet(nodeNumber, 0, 1)) {
+                        // System.out.println(nodeNumber + " is locked");
+                        return; 
+                    } else {
+                        // System.out.println("backoff");
+                        backoff();
+                    }
                 }
             }
+
+            public void unlock(int nodeNumber) {
+                // System.out.println(nodeNumber + " is unlocked");
+                lockNode.set(nodeNumber, 0); 
+            }             
         }
+
+       
 
         // Do a BFS from source to sink and compute the depth/level of each node
         // which is the minimum number of edges from that node to the source.
@@ -207,7 +302,7 @@ public class DinicsParallelBFS {
             return level[t] != -1;
         }
 
-        static class BFSHelper extends DinicsParallelBFS implements Runnable {
+        static class BFSHelper extends DinicsParallelBFSDFS implements Runnable {
             public void run() {
                 boolean firstEntry = true;
                 while (firstEntry || runIndex.equals(new AtomicInteger(0))) {
@@ -234,25 +329,6 @@ public class DinicsParallelBFS {
             }
         }
 
-        private long dfs(int at, int[] next, long flow) {
-            if (at == t)
-                return flow;
-            final int numEdges = graph[at].size();
-
-            for (; next[at] < numEdges; next[at]++) {
-                Edge edge = graph[at].get(next[at]);
-                long cap = edge.remainingCapacity();
-                if (cap > 0 && level[edge.to] == level[at] + 1) {
-
-                    long bottleNeck = dfs(edge.to, next, min(flow, cap));
-                    if (bottleNeck > 0) {
-                        edge.augment(bottleNeck);
-                        return bottleNeck;
-                    }
-                }
-            }
-            return 0;
-        }
     }
 
     public static void main(String[] args) {
@@ -268,6 +344,7 @@ public class DinicsParallelBFS {
             int n = kb.nextInt();
             int s = 0;
             int t = n - 1;
+            lockNode = new AtomicIntegerArray(n);
 
             NetworkFlowSolverBase solver;
             solver = new DinicsSolver(n, s, t);
