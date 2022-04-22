@@ -4,7 +4,6 @@
  * level graph using a BFS and then finding augmenting paths on the level graph using multiple DFSs.
  *
  * Time Complexity: O(EV²)
- * 
  * William Fiset's template code for Dinics sequential was used to construct this parallel version:
  * https://github.com/williamfiset/Algorithms/blob/master/src/main/java/com/williamfiset/algorithms/graphtheory/networkflow/examples/DinicsExample.java
  */
@@ -119,7 +118,7 @@ public class DinicsParallelBFSDFS {
             graph[from].add(e1);
             graph[to].add(e2);
         }
-
+        
         /**
          * Returns the residual graph after the solver has been executed. This allows
          * you to inspect the
@@ -179,7 +178,7 @@ public class DinicsParallelBFSDFS {
             while (bfs()) {
                 Arrays.fill(next, 0);
                 // Find max flow by adding all augmenting path flows using all threads
-                int numThreads = 16;
+                int numThreads = 8;
                 ExecutorService service = Executors.newFixedThreadPool(numThreads);
                 for (int i = 0; i < numThreads; i++) {
                     service.submit(new DFSHelper(s, next, t));
@@ -199,8 +198,8 @@ public class DinicsParallelBFSDFS {
         
         static class DFSHelper extends DinicsParallelBFSDFS implements Runnable {
             private int limit = MIN_DELAY;
-            private static final int MIN_DELAY = 1;
-            private static final int MAX_DELAY = 25;
+            private static final int MIN_DELAY = 10;
+            private static final int MAX_DELAY = 1000;
             // To avoid overflow, set infinity to a value less than Long.MAX_VALUE;
             final long INF = Long.MAX_VALUE / 2;
             // Inputs: n = number of nodes, s = source, t = sink
@@ -226,7 +225,7 @@ public class DinicsParallelBFSDFS {
                     Edge edge = graph[at].get(next[at]);
                     long cap = edge.remainingCapacity();
                     if (cap > 0 && level[edge.to] == level[at] + 1) {
-                        this.lock(edge.to);
+                        this.lock(edge.from);
                         try {
                             cap = edge.remainingCapacity();
                             if (cap > 0 && level[edge.to] == level[at] + 1) {
@@ -239,7 +238,7 @@ public class DinicsParallelBFSDFS {
                         } catch(Exception e) {
                             e.printStackTrace();
                         } finally {
-                            this.unlock(edge.to);
+                            this.unlock(edge.from);
                         }
                     }
                 }
@@ -287,7 +286,7 @@ public class DinicsParallelBFSDFS {
             q.offer(s);
             level[s] = 0;
 
-            int numThreads = 16;
+            int numThreads = 8;
             ExecutorService service = Executors.newFixedThreadPool(numThreads);
             for (int i = 0; i < numThreads; i++) {
                 service.submit(new BFSHelper());
