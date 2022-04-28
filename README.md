@@ -8,7 +8,7 @@ The following are the algorithms and the group members working on making it para
 #### John Pham and Neo Camanga
 
 ### Edmonds-Karp Algorithm
-#### Glenn Hartwell
+#### Glenn Eric Hartwell
 
 ### Dinics Algorithm
 #### Brian Moon and Federico Baron
@@ -16,15 +16,17 @@ The following are the algorithms and the group members working on making it para
 ## Running the Program
 The testing datasets 50v.in through 1000v.in come from <https://github.com/SumitPadhiyar/parallel_ford_fulkerson_gpu/tree/master/dataset>. An important thing to note about the datasets we are using is that the source node is 0 and the sink node is n-1. (n is number of nodes in the set)
 
-To run a program, follow the following paradigm:
+To run a program, navigate to the appropriate directory and follow the following paradigm:
 <br />
-`$ javac FordFulkerson`
+`$ javac FordFulkerson.java`
 <br />
 `$ java FordFulkerson`
 
 It will ask for a path:
 <br />
 `$ ../dataset/50v.in`
+
+*Note: check which directory you are in with respect to the `datasets` directory*
 
 ### Expected Maxflow Output for following datasets:
 - mytest1.in | 19
