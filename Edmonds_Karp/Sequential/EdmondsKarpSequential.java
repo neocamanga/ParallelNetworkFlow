@@ -10,6 +10,7 @@ import java.util.*;
  */
 public class EdmondsKarpSequential
 {
+
     public static void main(String[] args)
     {
 		Graph graph = new Graph();
@@ -38,7 +39,7 @@ public class EdmondsKarpSequential
             for (Edge e = path[graph.sink]; e != null; e = path[e.u])
             {
                 e.flow += pushFlow;
-                e.reverse.flow -= pushFlow;
+                // e.reverse.flow -= pushFlow;
             }
             
             maxFlow += pushFlow;
@@ -78,7 +79,6 @@ class Graph
 		this.numNodes = scan.nextInt();
 		this.source = 0;
 		this.sink = numNodes - 1;
-
 		this.matrix = new Node[numNodes];
 
 		// Initialize each node
@@ -95,16 +95,16 @@ class Graph
 			
 			// Note edge "b" is not actually in the input matrix
 			// It is a construct that allows us to solve the problem
-			Edge a = new Edge(u , v , 0 , c);
-			Edge b = new Edge(v , u , 0 , 0);
+			Edge a = new Edge(u , v , 0, c);
+			// Edge b = new Edge(v , u , 0, 0);
 			
 			// Set pointer from each edge "a" to
 			// its reverse edge "b" and vice versa
-			a.setReverse(b);
-			b.setReverse(a);
+			// a.setReverse(b);
+			// b.setReverse(a);
 			
 			matrix[u].edges.add(a);
-			matrix[v].edges.add(b);
+			// matrix[v].edges.add(b);
 		}
         scan.close();
     }
@@ -138,10 +138,9 @@ class Graph
 
 class Node
 {
-
 	// List of edges also includes reverse edges that
 	// are not in original given graph (for push-back flow)
-	ArrayList<Edge> edges = new ArrayList<>();
+	List<Edge> edges = new ArrayList<>();
 
 }
 

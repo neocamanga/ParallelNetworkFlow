@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -13,6 +14,12 @@ public class InitialEdmondsKarpParallel implements Runnable
 {
 	public int maxFlow = 0;
 	Graph graph = new Graph();
+	CyclicBarrier barrier;
+
+	InitialEdmondsKarpParallel(CyclicBarrier barrier)
+	{
+		this.barrier = barrier;
+	}
 
     public void run()
     {
@@ -38,52 +45,60 @@ public class InitialEdmondsKarpParallel implements Runnable
             for (Edge e = path[graph.sink]; e != null; e = path[e.u])
             {
                 e.flow += pushFlow;
-                e.reverse.flow -= pushFlow;
+                // e.reverse.flow -= pushFlow;
             }
 
-            for (Edge e : path)
+			for (int i = 0; i < path.length; i++)
 			{
-				if (e != null)
-					e.unlock();
+				if (path[i] != null)
+					path[i].unlock();
 			}
             maxFlow += pushFlow;
         }
-		System.out.println("Thread terminating...");
-		for (Edge e : path)
-			if (e != null)
-				e.unlock();
+		// System.out.println("Thread terminating...");
+		for (int i = 0; i < path.length; i++)
+		{
+			if (path[i] != null)
+				path[i].unlock();
+		}
+		try
+		{
+			barrier.await();
+		}
+		catch (Exception e) {}
     }
 
 	public static void main(String[] args)
 	{
+		int numThreads = 8;
+		CyclicBarrier barrier = new CyclicBarrier(numThreads + 1);
+
 		try
 		{
-			InitialEdmondsKarpParallel ek = new InitialEdmondsKarpParallel();
+			InitialEdmondsKarpParallel ek = new InitialEdmondsKarpParallel(barrier);
 			long start = System.currentTimeMillis();
 			Thread thread1 = new Thread(ek);
 			thread1.start();
-			thread1.join();
 			Thread thread2 = new Thread(ek);
 			thread2.start();
-			thread2.join();
 			Thread thread3 = new Thread(ek);
 			thread3.start();
-			thread3.join();
 			Thread thread4 = new Thread(ek);
 			thread4.start();
-			thread4.join();
 			Thread thread5 = new Thread(ek);
 			thread5.start();
-			thread5.join();
 			Thread thread6 = new Thread(ek);
 			thread6.start();
-			thread6.join();
 			Thread thread7 = new Thread(ek);
 			thread7.start();
-			thread7.join();
 			Thread thread8 = new Thread(ek);
 			thread8.start();
-			thread8.join();
+			
+			try
+			{
+				barrier.await();
+			}
+			catch (Exception e) {}
 			long end = System.currentTimeMillis();
 			System.out.println("Max flow: " + ek.maxFlow);
 			System.out.println("Execution time: " + (end - start));
@@ -139,15 +154,15 @@ class Graph
 			// Note edge "b" is not actually in the input matrix
 			// It is a construct that allows us to solve the problem
 			Edge a = new Edge(u , v , 0 , c);
-			Edge b = new Edge(v , u , 0 , 0);
+			// Edge b = new Edge(v , u , 0 , 0);
 			
 			// Set pointer from each edge "a" to
 			// its reverse edge "b" and vice versa
-			a.setReverse(b);
-			b.setReverse(a);
+			// a.setReverse(b);
+			// b.setReverse(a);
 			
 			matrix[u].edges.add(a);
-			matrix[v].edges.add(b);
+			// matrix[v].edges.add(b);
 		}
         scan.close();
     }
